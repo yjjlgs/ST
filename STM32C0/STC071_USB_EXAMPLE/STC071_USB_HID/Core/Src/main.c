@@ -121,7 +121,7 @@ int main(void)
   /* -- Sample board code to send message over COM1 port ---- */
 
   printf("%s\n\r", software_version);
-  printf("Welcome to STM32 world !\n\r");
+  printf("USB HID MOUSE!\n\r");
 
   /* -- Sample board code to switch on leds ---- */
   BSP_LED_On(LED_GREEN);
@@ -148,6 +148,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    USBX_Device_Process(NULL);
   }
   /* USER CODE END 3 */
 }
