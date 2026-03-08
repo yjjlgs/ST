@@ -1,0 +1,15 @@
+"D:\Program Files\IAR Systems\ewarm-9.70.1\arm\bin\armproc.dll"
+
+ "D:\Program Files\IAR Systems\ewarm-9.70.1\arm\bin\armstlink.dll"
+
+ E:\KeilProject\GitManage\ST\STM32C0\STC071_USB_EXAMPLE\STC071_USB_CDC\EWARM\STC071_OFFICIAL_SIMPLE_EXAMPLE\Exe\STC071_OFFICIAL_SIMPLE_EXAMPLE.out
+
+ "--plugin=D:\Program Files\IAR Systems\ewarm-9.70.1\arm\bin\armLibSupportUniversal.dll"
+
+ "--device_macro=D:\Program Files\IAR Systems\ewarm-9.70.1\arm/config/debugger/ST/STM32C0xx.dmac"
+
+ "--flash_loader=D:\Program Files\IAR Systems\ewarm-9.70.1\arm/config/flashloader/ST/FlashSTM32C07xxB.board"
+
+ 
+
+
