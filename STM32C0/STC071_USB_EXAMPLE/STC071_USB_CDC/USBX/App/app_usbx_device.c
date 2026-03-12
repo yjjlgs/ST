@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usb.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -155,7 +155,7 @@ UINT MX_USBX_Device_Init(VOID)
   }
 
   /* USER CODE BEGIN MX_USBX_Device_Init1 */
-
+  USBX_APP_Device_Init();
   /* USER CODE END MX_USBX_Device_Init1 */
 
   return ret;
@@ -210,5 +210,40 @@ ULONG _ux_utility_time_get(VOID)
 }
 
 /* USER CODE BEGIN 1 */
+VOID USBX_APP_Device_Init(VOID)
+{
+  /* USER CODE BEGIN USB_Device_Init_PreTreatment_0 */
+  /* USER CODE END USB_Device_Init_PreTreatment_0 */
 
+  /* USB_OTG_HS init function */
+  MX_USB_PCD_Init();
+
+  /* USER CODE BEGIN USB_Device_Init_PreTreatment_1 */
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x00, PCD_SNG_BUF, 0x14);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x80, PCD_SNG_BUF, 0x54);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x81, PCD_SNG_BUF, 0x94);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x01, PCD_SNG_BUF, 0xD4);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x82, PCD_SNG_BUF, 0x114);
+  /* USER CODE END USB_Device_Init_PreTreatment_1 */
+
+  /* initialize the device controller driver*/
+  ux_dcd_stm32_initialize((ULONG)USB_DRD_FS, (ULONG)&hpcd_USB_DRD_FS);
+
+  /* USER CODE BEGIN USB_Device_Init_PostTreatment */
+  HAL_PCD_Start(&hpcd_USB_DRD_FS);
+  /* USER CODE END USB_Device_Init_PostTreatment */
+}
+
+
+/**
+  * @brief MX_USBX_Device_Process
+  *        Run USBX state machine.
+  * @retval None
+  */
+VOID MX_USBX_Device_Process(VOID)
+{
+  ux_device_stack_tasks_run();
+  CDC_ACM_Read_Task();
+  CDC_ACM_Write_Task();
+}
 /* USER CODE END 1 */

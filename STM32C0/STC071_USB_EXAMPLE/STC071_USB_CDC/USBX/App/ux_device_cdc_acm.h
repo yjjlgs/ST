@@ -46,7 +46,8 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+#define APP_RX_DATA_SIZE   2048
+#define APP_TX_DATA_SIZE   2048
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -55,12 +56,14 @@ VOID USBD_CDC_ACM_Deactivate(VOID *cdc_acm_instance);
 VOID USBD_CDC_ACM_ParameterChange(VOID *cdc_acm_instance);
 
 /* USER CODE BEGIN EFP */
-
+VOID CDC_ACM_Read_Task(void);
+VOID CDC_ACM_Write_Task(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
+extern uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
 /* USER CODE END PD */
 
 /* USER CODE BEGIN 1 */

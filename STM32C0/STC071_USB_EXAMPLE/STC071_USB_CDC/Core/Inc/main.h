@@ -44,7 +44,8 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern __IO uint32_t BspButtonState;
+extern volatile uint8_t tx_pending; 
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

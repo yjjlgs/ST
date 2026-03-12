@@ -42,7 +42,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 #define UX_DEVICE_APP_MEM_POOL_SIZE         10*1024
-#define USBX_DEVICE_MEMORY_STACK_SIZE       6*1024
+#define USBX_DEVICE_MEMORY_STACK_SIZE       8*1024
 
 /* USER CODE BEGIN EC */
 
@@ -57,7 +57,8 @@ extern "C" {
 UINT MX_USBX_Device_Init(VOID);
 
 /* USER CODE BEGIN EFP */
-
+VOID MX_USBX_Device_Process(VOID);
+VOID USBX_APP_Device_Init(VOID);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
