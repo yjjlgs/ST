@@ -48,6 +48,7 @@ extern "C" {
 /* USER CODE BEGIN EM */
 #define APP_RX_DATA_SIZE   2048
 #define APP_TX_DATA_SIZE   2048
+#define CDC_RX_DATA_SIZE   64
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -56,7 +57,8 @@ VOID USBD_CDC_ACM_Deactivate(VOID *cdc_acm_instance);
 VOID USBD_CDC_ACM_ParameterChange(VOID *cdc_acm_instance);
 
 /* USER CODE BEGIN EFP */
-VOID CDC_ACM_Read_Task(void);
+VOID CDC_ACM_Read_Single_Package_Task(void);
+VOID CDC_ACM_Read_Multi_Package_Task(void);
 VOID CDC_ACM_Write_Task(void);
 /* USER CODE END EFP */
 

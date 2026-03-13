@@ -120,8 +120,8 @@ int main(void)
 
   /* -- Sample board code to send message over COM1 port ---- */
 
-  printf("%s\n\r", software_version);
-  printf("USB CDC ACM Example!\n\r");
+  printf("%s\r\n", software_version);
+  printf("USB CDC ACM Example!\r\n");
 
   /* -- Sample board code to switch on leds ---- */
   BSP_LED_On(LED_GREEN);
@@ -195,10 +195,10 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void init_array(void)
 {
-    for (uint8_t i = 0; i < 64; i++)
-    {
-        UserTxBufferFS[i] = i; // Fill the buffer with incremental values
-    }
+  for (uint32_t i = 0; i < APP_TX_DATA_SIZE; i++)
+  {
+    UserTxBufferFS[i] = (uint8_t)(i & 0xFF); // Fill with incremental byte values
+  }
 }
 /* USER CODE END 4 */
 

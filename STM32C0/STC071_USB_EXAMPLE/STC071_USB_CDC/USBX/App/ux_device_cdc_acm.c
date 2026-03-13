@@ -25,6 +25,8 @@
 /* USER CODE BEGIN Includes */
 #include "main.h"
 #include "stm32c0xx_nucleo.h"
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +46,8 @@
 #define MIN_BAUDRATE     9600
 #define APP_CDC_ACM_READ_STATE_TX_START  (UX_STATE_APP_STEP + 0)
 #define APP_CDC_ACM_READ_STATE_TX_WAIT   (UX_STATE_APP_STEP + 1)
+/* Enable CDC speed test and printing when defined */
+#define ENABLE_CDC_SPEED_TEST 1 
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -53,7 +57,7 @@ UX_SLAVE_CLASS_CDC_ACM  *cdc_acm;
 /* Data to send over USB CDC are stored in this buffer */
 uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 uint8_t UserTxBufferFS[APP_TX_DATA_SIZE];
-
+uint8_t CDCRxBufferFS[CDC_RX_DATA_SIZE];
 UX_SLAVE_CLASS_CDC_ACM_LINE_CODING_PARAMETER CDC_VCP_LineCoding =
 {
   115200, /* baud rate */
@@ -180,11 +184,11 @@ VOID USBD_CDC_ACM_ParameterChange(VOID *cdc_acm_instance)
 /* USER CODE BEGIN 1 */
 
 /**
-  * @brief  CDC_ACM_Read_Task.
+  * @brief  CDC_ACM_Read_Single_Package_Task.
   * @param  none
   * @retval none
   */
-VOID CDC_ACM_Read_Task(VOID)
+VOID CDC_ACM_Read_Single_Package_Task(VOID)
 {
   UX_SLAVE_DEVICE *device;
   UX_SLAVE_INTERFACE *data_interface;
@@ -246,14 +250,198 @@ VOID CDC_ACM_Read_Task(VOID)
       {
         HAL_UART_Transmit(&hcom_uart[COM1], (uint8_t *)UserRxBufferFS, actual_length, COM_POLL_TIMEOUT);
       }
-      read_state = APP_CDC_ACM_READ_STATE_TX_WAIT;
+      read_state = UX_STATE_RESET;
+      return;
       /* DMA started.  */
-
+      read_state = APP_CDC_ACM_READ_STATE_TX_WAIT;
       /* Fall through.  */
     case APP_CDC_ACM_READ_STATE_TX_WAIT:
       /* Check the DMA transfer status.  */
 
       read_state = UX_STATE_WAIT;
+      return;
+    default:
+      return;
+  }
+}
+
+/**
+  * @brief  CDC_ACM_Read_Multi_Package_Task.
+  * @param  none
+  * @retval none
+  */
+VOID CDC_ACM_Read_Multi_Package_Task(VOID)
+{
+  UX_SLAVE_DEVICE *device;
+  UX_SLAVE_INTERFACE *data_interface;
+  UX_SLAVE_CLASS_CDC_ACM *cdc_acm;
+  UINT  status;
+  ULONG read_length;
+  static ULONG actual_length;
+  static uint32_t cdc_rx_accumulated_len = 0;
+  static uint8_t cdc_rx_packing = 0; // 0: 0: Idle, 1: Combining packages
+  static uint8_t data_null_count = 0;
+  /* Timestamp and stats for a frame */
+  static uint32_t cdc_frame_start_ts = 0;
+  static uint32_t cdc_frame_end_ts = 0;
+  static char cdc_stats_msg[96];
+
+  /* Get device */
+  device = &_ux_system_slave->ux_system_slave_device;
+
+  /* Check if device is configured */
+  if (device->ux_slave_device_state != UX_DEVICE_CONFIGURED)
+  {
+    actual_length = 0;
+    cdc_rx_packing = 0;
+    cdc_rx_accumulated_len = 0;
+    read_state = UX_STATE_RESET;
+    return;
+  }
+
+  /* Get Data interface (interface 1) */
+  data_interface = device->ux_slave_device_first_interface->ux_slave_interface_next_interface;
+  cdc_acm =  data_interface->ux_slave_interface_class_instance;
+  read_length = (_ux_system_slave->ux_system_slave_speed == UX_HIGH_SPEED_DEVICE) ? 512 : 64;
+
+  /*Null pointer protection*/
+  if (cdc_acm == UX_NULL)
+  {
+        return; 
+  }
+  /* Run state machine.  */
+  switch(read_state)
+  {
+    case UX_STATE_RESET:
+      
+      cdc_rx_accumulated_len = 0;
+      cdc_rx_packing = 0;
+      read_state = UX_STATE_WAIT;
+      /* Fall through.  */
+    case UX_STATE_WAIT:
+      actual_length = 0;
+      //memset(UserRx1BufferFS, 0, APP_RX_DATA_SIZE);
+      status = ux_device_class_cdc_acm_read_run(cdc_acm,
+                                                //(UCHAR *)UserRx1BufferFS + cdc_rx_accumulated_len,
+                                                &CDCRxBufferFS[0],
+                                                read_length,
+                                                &actual_length);
+      //printf("status: %d, %d\r\n", status, actual_length);
+      /* Error.  */
+      if (status <= UX_STATE_ERROR)
+      {
+        
+        if (cdc_rx_accumulated_len > 0) {
+          //The buffer contains data and is in the sending state
+          read_state = APP_CDC_ACM_READ_STATE_TX_START;
+        } else {
+            //No data in the buffer, reset status
+            cdc_rx_packing = 0;
+            cdc_rx_accumulated_len = 0;
+            read_state = UX_STATE_RESET;
+        }
+        return;
+      }
+      if (status == UX_STATE_NEXT)
+      {
+        if (actual_length != 0)
+        {
+                  /* First data of a new frame: record start timestamp */
+                  if (cdc_rx_accumulated_len == 0)
+                  {
+        #if defined(ENABLE_CDC_SPEED_TEST)
+                    cdc_frame_start_ts = HAL_GetTick();
+        #endif
+                  }
+
+          /* Empty data count cleared */
+          data_null_count = 0;
+          /* If there is already data in the buffer, update the bundling status */
+          if (cdc_rx_accumulated_len > 0) {
+            cdc_rx_packing = 1;
+          }
+          memcpy(&UserRxBufferFS[cdc_rx_accumulated_len], &CDCRxBufferFS[0], actual_length);
+          cdc_rx_accumulated_len += actual_length;
+          
+          //read_state_1 = APP_CDC_ACM_READ_STATE_TX_START;
+          //Check if the remaining space can still receive another packet
+          if ((APP_RX_DATA_SIZE - cdc_rx_accumulated_len) < read_length) {
+              //There is less than 64 remaining space, please send directly
+              read_state = APP_CDC_ACM_READ_STATE_TX_START;
+              return;
+          }
+        }
+        else
+        {
+          read_state = UX_STATE_RESET;
+        }
+        return;
+      }
+      /* Wait.  */
+      //USB idle and with data, send directly
+      if (status == UX_STATE_WAIT && cdc_rx_accumulated_len > 0 ) {
+        if(actual_length == 0)
+        {
+          // Empty data count
+          data_null_count++;
+          // If there are more than 15 consecutive empty data, it means that the transmission is complete, and the data in the buffer can be sent directly. 
+          // This is to avoid the problem of incomplete data caused by the idle timeout of USB.
+          if(data_null_count > 15)
+          {
+            // Accumulate two empty data and send them
+            data_null_count = 0;
+            read_state = APP_CDC_ACM_READ_STATE_TX_START;
+          }
+          return;
+        }else{
+          read_state = UX_STATE_WAIT;
+        }
+        
+          
+      }
+      return;
+    case APP_CDC_ACM_READ_STATE_TX_START:
+    //   /* Send the data via UART */
+
+
+    /*Print masking*/
+      /* Record end timestamp and print stats */
+#if defined(ENABLE_CDC_SPEED_TEST)
+      cdc_frame_end_ts = HAL_GetTick();
+      if (cdc_frame_start_ts == 0)
+      {
+        /* if start ts not set, treat as instantaneous */
+        cdc_frame_start_ts = cdc_frame_end_ts;
+      }
+      uint32_t duration_ms = (cdc_frame_end_ts - cdc_frame_start_ts);
+      uint32_t bytes = cdc_rx_accumulated_len;
+      uint32_t rate_bps = 0;
+      uint32_t rate_kb = 0;
+      if (duration_ms > 0)
+      {
+        rate_bps = (bytes * 1000u) / duration_ms; /* bytes per second */
+        rate_kb = rate_bps / 1024u; /* KB/s */
+      }
+      int n = snprintf(cdc_stats_msg, sizeof(cdc_stats_msg), "CDC frame: %lu bytes, %lu ms, %lu KB/s\r\n",
+                       (unsigned long)bytes, (unsigned long)duration_ms, (unsigned long)rate_kb);
+      if (n > 0)
+      {
+        HAL_UART_Transmit(&hcom_uart[COM1], (uint8_t *)cdc_stats_msg, (uint16_t)strnlen(cdc_stats_msg, sizeof(cdc_stats_msg)), 0xff);
+      }
+      /* reset frame tracking */
+      cdc_frame_start_ts = 0;
+      cdc_frame_end_ts = 0;
+#endif
+      HAL_UART_Transmit(&hcom_uart[COM1], &UserRxBufferFS[0], cdc_rx_accumulated_len, 0xff);
+      read_state = UX_STATE_RESET;
+     return;
+      /* DMA started.  */
+      read_state = APP_CDC_ACM_READ_STATE_TX_WAIT;
+
+      /* Fall through.  */
+    case APP_CDC_ACM_READ_STATE_TX_WAIT:
+      // DMA TF FLAG
+      read_state = UX_STATE_RESET;
       return;
     default:
       return;
@@ -270,18 +458,22 @@ VOID CDC_ACM_Write_Task(VOID)
   UX_SLAVE_DEVICE    *device;
   UX_SLAVE_INTERFACE *data_interface;
   UX_SLAVE_CLASS_CDC_ACM *cdc_acm;
-  ULONG actual_length;
+  ULONG actual_length = 0;
+  /* TX timing/stats */
+  static uint32_t tx_frame_start_ts = 0;
+  static uint32_t tx_frame_end_ts = 0;
+  static uint32_t tx_frame_bytes = 0;
+  static char tx_stats_msg[96];
   //ULONG buffptr;
   //ULONG buffsize;
   UINT ux_status = UX_SUCCESS;
-
   /* Get device */
   device = &_ux_system_slave->ux_system_slave_device;
 
   /* Check if device is configured */
   if (device->ux_slave_device_state != UX_DEVICE_CONFIGURED)
   {
-    read_state = UX_STATE_RESET;
+    write_state = UX_STATE_RESET;
     return;
   }
 
@@ -293,19 +485,46 @@ VOID CDC_ACM_Write_Task(VOID)
         case UX_STATE_RESET:
             if (tx_pending) {
                 tx_pending = 0;
-                ux_status = ux_device_class_cdc_acm_write_run(cdc_acm, UserTxBufferFS, 64, &actual_length);
-                //printf("TX start: %02x %d\r\n", ux_status, actual_length);
+          /* record start timestamp and set bytes to APP_TX_DATA_SIZE before write call */
+#if defined(ENABLE_CDC_SPEED_TEST)
+          tx_frame_start_ts = HAL_GetTick();
+          tx_frame_bytes = APP_TX_DATA_SIZE;
+#endif
+          ux_status = ux_device_class_cdc_acm_write_run(cdc_acm, UserTxBufferFS, APP_TX_DATA_SIZE, &actual_length);
+          //printf("TX start: %02x %d\r\n", ux_status, actual_length);
                 if (ux_status == UX_STATE_WAIT) {
                     write_state = UX_STATE_WAIT;
                 }
             }
             break;
         case UX_STATE_WAIT:
-            ux_status = ux_device_class_cdc_acm_write_run(cdc_acm, UX_NULL, 0, &actual_length);
-            //printf("TX wait: %02x %d\r\n", ux_status, actual_length);
-            if (ux_status <= UX_STATE_NEXT) {
-                write_state = UX_STATE_RESET;
+        ux_status = ux_device_class_cdc_acm_write_run(cdc_acm, UX_NULL, 0, &actual_length);
+        //printf("TX wait: %02x %d\r\n", ux_status, actual_length);
+        if (ux_status <= UX_STATE_NEXT) {
+#if defined(ENABLE_CDC_SPEED_TEST)
+          /* record end timestamp and print stats if we had a start */
+          if (tx_frame_start_ts != 0) {
+            tx_frame_end_ts = HAL_GetTick();
+            uint32_t duration_ms = (tx_frame_end_ts - tx_frame_start_ts);
+            uint32_t bytes = tx_frame_bytes;
+            uint32_t rate_bps = 0;
+            uint32_t rate_kb = 0;
+            if (duration_ms > 0) {
+              rate_bps = (bytes * 1000u) / duration_ms; /* bytes per second */
+              rate_kb = rate_bps / 1024u; /* KB/s */
             }
+            int n = snprintf(tx_stats_msg, sizeof(tx_stats_msg), "CDC TX: %lu bytes, %lu ms, %lu KB/s\r\n",
+                     (unsigned long)bytes, (unsigned long)duration_ms, (unsigned long)rate_kb);
+            if (n > 0) {
+              HAL_UART_Transmit(&hcom_uart[COM1], (uint8_t *)tx_stats_msg, (uint16_t)strnlen(tx_stats_msg, sizeof(tx_stats_msg)), 0xff);
+            }
+            tx_frame_start_ts = 0;
+            tx_frame_end_ts = 0;
+            tx_frame_bytes = 0;
+          }
+#endif
+          write_state = UX_STATE_RESET;
+        }
             break;
         default:
             write_state = UX_STATE_RESET;
