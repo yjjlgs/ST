@@ -189,7 +189,8 @@ UINT MX_USBX_Device_Init(VOID)
   }
 
   /* USER CODE BEGIN MX_USBX_Device_Init1 */
-
+  /* Initialization of USB device */
+  USBX_APP_Device_Init();
   /* USER CODE END MX_USBX_Device_Init1 */
 
   return ret;
@@ -237,12 +238,62 @@ ULONG _ux_utility_time_get(VOID)
   ULONG time_tick = 0U;
 
   /* USER CODE BEGIN _ux_utility_time_get */
-
+  time_tick = HAL_GetTick();
   /* USER CODE END _ux_utility_time_get */
 
   return time_tick;
 }
 
 /* USER CODE BEGIN 1 */
+/**
+  * @brief  MX_USBX_Device_Process
+  *         Run USBX state machine.
+  * @param  arg: not used
+  * @retval none
+  */
+VOID USBX_Device_Process(VOID *arg)
+{
+  ux_device_stack_tasks_run();
+  USBX_DEVICE_HID_MOUSE_Task();
+  CDC_ACM_Read_Multi_Package_Task();
+  CDC_ACM_Write_Task();
+}
+
+
+/**
+  * @brief  USBX_APP_Device_Init
+  *         Initialization of USB device.
+  * @param  none
+  * @retval none
+  */
+VOID USBX_APP_Device_Init(VOID)
+{
+  /* USER CODE BEGIN USB_Device_Init_PreTreatment_0 */
+
+  /* USER CODE END USB_Device_Init_PreTreatment_0 */
+
+  /* USB_DRD_FS init function */
+  MX_USB_PCD_Init();
+  /* USB_DRD_FS init function */
+
+
+  /* USER CODE BEGIN USB_Device_Init_PreTreatment_1 */
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x00, PCD_SNG_BUF, 0x18);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x80, PCD_SNG_BUF, 0x58);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x81, PCD_SNG_BUF, 0x98);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x02, PCD_SNG_BUF, 0xD8);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x82, PCD_SNG_BUF, 0x118);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x83, PCD_SNG_BUF, 0x158);
+  /* USER CODE END USB_Device_Init_PreTreatment_1 */
+
+  /* Initialize the device controller driver*/
+  ux_dcd_stm32_initialize((ULONG)USB_DRD_FS, (ULONG)&hpcd_USB_DRD_FS);
+  /* Start the USB device */
+  HAL_PCD_Start(&hpcd_USB_DRD_FS);
+
+  /* USER CODE BEGIN USB_Device_Init_PostTreatment */
+
+  /* USER CODE END USB_Device_Init_PostTreatment */
+}
 
 /* USER CODE END 1 */

@@ -56,7 +56,7 @@ UINT USBD_HID_Mouse_GetReport(UX_SLAVE_CLASS_HID *hid_instance,
                               UX_SLAVE_CLASS_HID_EVENT *hid_event);
 
 /* USER CODE BEGIN EFP */
-
+VOID USBX_DEVICE_HID_MOUSE_Task(VOID);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
