@@ -55,7 +55,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-
+extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -152,6 +152,20 @@ void EXTI4_15_IRQHandler(void)
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */
 
   /* USER CODE END EXTI4_15_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USB global interrupt (combined with EXTI 33).
+  */
+void USB_DRD_FS_IRQHandler(void)
+{
+  /* USER CODE BEGIN USB_DRD_FS_IRQn 0 */
+
+  /* USER CODE END USB_DRD_FS_IRQn 0 */
+  HAL_PCD_IRQHandler(&hpcd_USB_DRD_FS);
+  /* USER CODE BEGIN USB_DRD_FS_IRQn 1 */
+
+  /* USER CODE END USB_DRD_FS_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
