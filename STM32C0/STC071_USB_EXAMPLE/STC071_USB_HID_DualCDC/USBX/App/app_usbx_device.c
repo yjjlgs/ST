@@ -59,7 +59,9 @@ static UX_SLAVE_CLASS_HID_PARAMETER hid_mouse_parameter;
 static UX_SLAVE_CLASS_CDC_ACM_PARAMETER cdc_acm_parameter;
 
 /* USER CODE BEGIN PV */
-
+static UX_SLAVE_CLASS_CDC_ACM_PARAMETER cdc_acm_parameter_2;
+static ULONG cdc_acm_interface_number_2;
+static ULONG cdc_acm_configuration_number_2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -190,6 +192,35 @@ UINT MX_USBX_Device_Init(VOID)
 
   /* USER CODE BEGIN MX_USBX_Device_Init1 */
 
+  /* Initialize the cdc acm <2> class parameters for the device */
+  cdc_acm_parameter_2.ux_slave_class_cdc_acm_instance_activate   = USBD_CDC_ACM_2_Activate;
+  cdc_acm_parameter_2.ux_slave_class_cdc_acm_instance_deactivate = USBD_CDC_ACM_2_Deactivate;
+  cdc_acm_parameter_2.ux_slave_class_cdc_acm_parameter_change    = USBD_CDC_ACM_2_ParameterChange;
+
+  /* USER CODE BEGIN CDC_ACM_PARAMETER */
+
+  /* USER CODE END CDC_ACM_PARAMETER */
+
+  /* Get cdc acm configuration number */
+  cdc_acm_configuration_number_2 = USBD_Get_Configuration_Number(CLASS_TYPE_CDC_ACM, 1);
+
+  /* Find cdc acm interface number */
+  cdc_acm_interface_number_2 = USBD_Get_Interface_Number(CLASS_TYPE_CDC_ACM, 1);
+
+  /* Initialize the device cdc acm class */
+  if (ux_device_stack_class_register(_ux_system_slave_class_cdc_acm_name,
+                                     ux_device_class_cdc_acm_entry,
+                                     cdc_acm_configuration_number_2,
+                                     cdc_acm_interface_number_2,
+                                     &cdc_acm_parameter_2) != UX_SUCCESS)
+  {
+    /* USER CODE BEGIN USBX_DEVICE_CDC_ACM_REGISTER_ERROR */
+    return UX_ERROR;
+    /* USER CODE END USBX_DEVICE_CDC_ACM_REGISTER_ERROR */
+  }
+
+  /* Initialization of USB device */
+  USBX_APP_Device_Init();
   /* USER CODE END MX_USBX_Device_Init1 */
 
   return ret;
@@ -237,12 +268,67 @@ ULONG _ux_utility_time_get(VOID)
   ULONG time_tick = 0U;
 
   /* USER CODE BEGIN _ux_utility_time_get */
-
+  time_tick = HAL_GetTick();
   /* USER CODE END _ux_utility_time_get */
 
   return time_tick;
 }
 
 /* USER CODE BEGIN 1 */
+/**
+  * @brief  MX_USBX_Device_Process
+  *         Run USBX state machine.
+  * @param  arg: not used
+  * @retval none
+  */
+VOID USBX_Device_Process(VOID *arg)
+{
+  ux_device_stack_tasks_run();
+  USBX_DEVICE_HID_MOUSE_Task();
+  CDC_ACM_1_Read_Multiple_Package_Task();
+  CDC_ACM_1_Write_Task();
+  CDC_ACM_2_Read_Multiple_Package_Task();
+  CDC_ACM_2_Write_Task();
+}
+
+
+/**
+  * @brief  USBX_APP_Device_Init
+  *         Initialization of USB device.
+  * @param  none
+  * @retval none
+  */
+VOID USBX_APP_Device_Init(VOID)
+{
+  /* USER CODE BEGIN USB_Device_Init_PreTreatment_0 */
+
+  /* USER CODE END USB_Device_Init_PreTreatment_0 */
+
+  /* USB_DRD_FS init function */
+  MX_USB_PCD_Init();
+  /* USB_DRD_FS init function */
+
+
+  /* USER CODE BEGIN USB_Device_Init_PreTreatment_1 */
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x00, PCD_SNG_BUF, 0x30);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x80, PCD_SNG_BUF, 0x70);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x81, PCD_SNG_BUF, 0xB0);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x02, PCD_SNG_BUF, 0xF0);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x82, PCD_SNG_BUF, 0x130);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x83, PCD_SNG_BUF, 0x170);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x04, PCD_SNG_BUF, 0x1B0);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x84, PCD_SNG_BUF, 0x1F0);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x85, PCD_SNG_BUF, 0x230);
+  /* USER CODE END USB_Device_Init_PreTreatment_1 */
+
+  /* Initialize the device controller driver*/
+  ux_dcd_stm32_initialize((ULONG)USB_DRD_FS, (ULONG)&hpcd_USB_DRD_FS);
+  /* Start the USB device */
+  HAL_PCD_Start(&hpcd_USB_DRD_FS);
+
+  /* USER CODE BEGIN USB_Device_Init_PostTreatment */
+
+  /* USER CODE END USB_Device_Init_PostTreatment */
+}
 
 /* USER CODE END 1 */

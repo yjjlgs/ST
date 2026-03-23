@@ -46,7 +46,9 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+#define APP_RX_DATA_SIZE   2048
+#define APP_TX_DATA_SIZE   2048
+#define CDC_RX_DATA_SIZE   64
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -55,13 +57,26 @@ VOID USBD_CDC_ACM_Deactivate(VOID *cdc_acm_instance);
 VOID USBD_CDC_ACM_ParameterChange(VOID *cdc_acm_instance);
 
 /* USER CODE BEGIN EFP */
+VOID USBD_CDC_ACM_2_Activate(VOID *cdc_acm_instance);
+VOID USBD_CDC_ACM_2_Deactivate(VOID *cdc_acm_instance);
+VOID USBD_CDC_ACM_2_ParameterChange(VOID *cdc_acm_instance);
 
+VOID CDC_ACM_1_Read_Single_Package_Task(VOID);
+VOID CDC_ACM_1_Read_Multiple_Package_Task(VOID);
+VOID CDC_ACM_2_Read_Single_Package_Task(VOID);
+VOID CDC_ACM_2_Read_Multiple_Package_Task(VOID);
+VOID CDC_ACM_1_Write_Task(void);
+VOID CDC_ACM_2_Write_Task(VOID);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+extern uint8_t UserRx1BufferFS[APP_RX_DATA_SIZE];
+extern uint8_t UserTx1BufferFS[APP_TX_DATA_SIZE];
+extern uint8_t UserRx2BufferFS[APP_RX_DATA_SIZE];
+extern uint8_t UserTx2BufferFS[APP_TX_DATA_SIZE];
 /* USER CODE END PD */
+
 
 /* USER CODE BEGIN 1 */
 

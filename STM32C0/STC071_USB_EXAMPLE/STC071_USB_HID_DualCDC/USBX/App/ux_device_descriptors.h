@@ -54,6 +54,13 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+/* Enum CDC Interface Type */
+typedef enum
+{
+  INTERFACE_CDC_ACM_1     = 0,
+  INTERFACE_CDC_ACM_2     = 1,
+} USBD_CDCInterfaceTypeDef;
+
 /* USER CODE END ET */
 /* Enum Class Type */
 typedef enum
@@ -352,6 +359,21 @@ uint16_t USBD_HID_ReportDesc_length(uint8_t hid_type);
 /* Private macro -----------------------------------------------------------*/
 /* USER CODE BEGIN Private_macro */
 
+/* Device CDC-ACM-2 Class */
+#define CDC1_CLASS_INDEX      1U   /* UserClassInstance 里第 1 个 CDC 的索引 */
+#define CDC2_CLASS_INDEX      2U   /* UserClassInstance 里第 2 个 CDC 的索引 */
+
+#define USBD_CDCACM_2_EPINCMD_ADDR                      0x85U
+#define USBD_CDCACM_2_EPINCMD_FS_MPS                    8U
+#define USBD_CDCACM_2_EPINCMD_HS_MPS                    8U
+#define USBD_CDCACM_2_EPIN_ADDR                         0x84U
+#define USBD_CDCACM_2_EPOUT_ADDR                        0x04U
+#define USBD_CDCACM_2_EPIN_FS_MPS                       64U
+#define USBD_CDCACM_2_EPIN_HS_MPS                       512U
+#define USBD_CDCACM_2_EPOUT_FS_MPS                      64U
+#define USBD_CDCACM_2_EPOUT_HS_MPS                      512U
+#define USBD_CDCACM_2_EPINCMD_FS_BINTERVAL              5U
+#define USBD_CDCACM_2_EPINCMD_HS_BINTERVAL              5U
 /* USER CODE END Private_macro */
 #define __USBD_FRAMEWORK_SET_EP(epadd, eptype, epsize, HSinterval, FSinterval) do { \
                                 /* Append Endpoint descriptor to Configuration descriptor */ \

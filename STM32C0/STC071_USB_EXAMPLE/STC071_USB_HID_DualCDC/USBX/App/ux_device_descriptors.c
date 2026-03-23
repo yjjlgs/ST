@@ -47,6 +47,12 @@ USBD_DevClassHandleTypeDef  USBD_Device_FS, USBD_Device_HS;
 uint8_t UserClassInstance[USBD_MAX_CLASS_INTERFACES] = {
   CLASS_TYPE_HID,
   CLASS_TYPE_CDC_ACM,
+  CLASS_TYPE_CDC_ACM
+};
+
+uint8_t UserCDCInterface[] = {
+  INTERFACE_CDC_ACM_1,
+  INTERFACE_CDC_ACM_2
 };
 
 uint8_t UserHIDInterface[] = {
@@ -589,7 +595,8 @@ uint8_t  USBD_FrameWork_AddClass(USBD_DevClassHandleTypeDef *pdev,
                                  uint8_t *pCmpstConfDesc)
 {
 
-  static uint8_t interface_idx = 0U;
+  static uint8_t interface_hid_idx = 0U;
+  static uint8_t interface_cdc_idx = 0U;
 
   if ((pdev->classId < USBD_MAX_SUPPORTED_CLASS) &&
       (pdev->tclasslist[pdev->classId].Active == 0U))
@@ -601,13 +608,23 @@ uint8_t  USBD_FrameWork_AddClass(USBD_DevClassHandleTypeDef *pdev,
 
     if (class == CLASS_TYPE_HID)
     {
-      pdev->tclasslist[pdev->classId].InterfaceType = UserHIDInterface[interface_idx];
+      pdev->tclasslist[pdev->classId].InterfaceType = UserHIDInterface[interface_hid_idx];
 
-      interface_idx++;
+      interface_hid_idx++;
 
-      if (interface_idx == sizeof(UserHIDInterface))
+      if (interface_hid_idx == sizeof(UserHIDInterface))
       {
-        interface_idx = 0U;
+        interface_hid_idx = 0U;
+      }
+    }else if(class == CLASS_TYPE_CDC_ACM)
+    {
+      pdev->tclasslist[pdev->classId].InterfaceType = UserCDCInterface[interface_cdc_idx];
+
+      interface_cdc_idx++;
+
+      if (interface_cdc_idx == sizeof(UserCDCInterface))
+      {
+        interface_cdc_idx = 0U;
       }
     }
 
@@ -637,7 +654,7 @@ uint8_t  USBD_FrameWork_AddToConfDesc(USBD_DevClassHandleTypeDef *pdev, uint8_t 
   uint8_t interface = 0U;
 
   /* USER CODE BEGIN FrameWork_AddToConfDesc_0 */
-
+  uint8_t id = pdev->classId;   // 0=HID, 1=CDC#0, 2=CDC#1, ...
   /* USER CODE END FrameWork_AddToConfDesc_0 */
 
   /* The USB drivers do not set the speed value, so set it here before starting */
@@ -715,31 +732,67 @@ uint8_t  USBD_FrameWork_AddToConfDesc(USBD_DevClassHandleTypeDef *pdev, uint8_t 
       /* Check the current speed to assign endpoints */
       if (Speed == USBD_HIGH_SPEED)
       {
-        /* Assign OUT Endpoint */
-        USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPOUT_ADDR,
-                                USBD_EP_TYPE_BULK, USBD_CDCACM_EPOUT_HS_MPS);
+        if (id == CDC1_CLASS_INDEX)          /* 第 1 个 CDC */
+        {
+            /* Assign OUT Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPOUT_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_EPOUT_HS_MPS);
 
-        /* Assign IN Endpoint */
-        USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPIN_ADDR,
-                                USBD_EP_TYPE_BULK, USBD_CDCACM_EPIN_HS_MPS);
+            /* Assign IN Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPIN_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_EPIN_HS_MPS);
 
-        /* Assign CMD Endpoint */
-        USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPINCMD_ADDR,
-                                USBD_EP_TYPE_INTR, USBD_CDCACM_EPINCMD_HS_MPS);
+            /* Assign CMD Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPINCMD_ADDR,
+                                    USBD_EP_TYPE_INTR, USBD_CDCACM_EPINCMD_HS_MPS);
+        }
+        else if (id == CDC2_CLASS_INDEX)     /* 第 2 个 CDC */
+        {
+            /* Assign OUT Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_2_EPOUT_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_2_EPOUT_HS_MPS);
+
+            /* Assign IN Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_2_EPIN_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_2_EPIN_HS_MPS);
+
+            /* Assign CMD Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_2_EPINCMD_ADDR,
+                                    USBD_EP_TYPE_INTR, USBD_CDCACM_2_EPINCMD_HS_MPS);
+        }
+
       }
       else
       {
-        /* Assign OUT Endpoint */
-        USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPOUT_ADDR,
-                                USBD_EP_TYPE_BULK, USBD_CDCACM_EPOUT_FS_MPS);
+        if (id == CDC1_CLASS_INDEX)          /* 第 1 个 CDC */
+        {
+            /* Assign OUT Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPOUT_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_EPOUT_FS_MPS);
 
-        /* Assign IN Endpoint */
-        USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPIN_ADDR,
-                                USBD_EP_TYPE_BULK, USBD_CDCACM_EPIN_FS_MPS);
+            /* Assign IN Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPIN_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_EPIN_FS_MPS);
 
-        /* Assign CMD Endpoint */
-        USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPINCMD_ADDR,
-                                USBD_EP_TYPE_INTR, USBD_CDCACM_EPINCMD_FS_MPS);
+            /* Assign CMD Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_EPINCMD_ADDR,
+                                    USBD_EP_TYPE_INTR, USBD_CDCACM_EPINCMD_FS_MPS);
+        }
+        else if (id == CDC2_CLASS_INDEX)     /* 第 2 个 CDC */
+        {
+            /* Assign OUT Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_2_EPOUT_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_2_EPOUT_FS_MPS);
+
+            /* Assign IN Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_2_EPIN_ADDR,
+                                    USBD_EP_TYPE_BULK, USBD_CDCACM_2_EPIN_FS_MPS);
+
+            /* Assign CMD Endpoint */
+            USBD_FrameWork_AssignEp(pdev, USBD_CDCACM_2_EPINCMD_ADDR,
+                                    USBD_EP_TYPE_INTR, USBD_CDCACM_2_EPINCMD_FS_MPS);
+        }
+        
       }
 
       /* Configure and Append the Descriptor */

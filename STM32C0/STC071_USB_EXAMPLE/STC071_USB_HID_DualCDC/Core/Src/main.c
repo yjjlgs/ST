@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ux_device_cdc_acm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,17 +51,20 @@ __IO uint32_t BspButtonState = BUTTON_RELEASED;
 
 const char software_version[] = "V0.0.1";
 
+volatile uint8_t tx_pending_1 = 0;
+volatile uint8_t tx_pending_2 = 0;
+volatile uint8_t mouse_state = BUTTON_RELEASED;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void init_array(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 /* USER CODE END 0 */
 
 /**
@@ -120,8 +123,8 @@ int main(void)
 
   /* -- Sample board code to send message over COM1 port ---- */
 
-  printf("%s\n\r", software_version);
-  printf("Welcome to STM32 world !\n\r");
+  printf("%s\r\n", software_version);
+  printf("USB HID DualCDC!\r\n");
 
   /* -- Sample board code to switch on leds ---- */
   BSP_LED_On(LED_GREEN);
@@ -131,6 +134,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  init_array();
   while (1)
   {
 
@@ -148,6 +152,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    USBX_Device_Process(NULL);
   }
   /* USER CODE END 3 */
 }
@@ -191,6 +196,14 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+void init_array(void)
+{
+    for (uint32_t i = 0; i < APP_TX_DATA_SIZE; i++)
+    {
+        UserTx1BufferFS[i] = (uint8_t)(i & 0xFF); // Fill with incremental byte values
+        UserTx2BufferFS[i] = (uint8_t)(i & 0xFF); // Fill with incremental byte values
+    }
+}
 
 /* USER CODE END 4 */
 
@@ -204,6 +217,9 @@ void BSP_PB_Callback(Button_TypeDef Button)
   if (Button == BUTTON_USER)
   {
     BspButtonState = BUTTON_PRESSED;
+    tx_pending_1 = 1;
+    tx_pending_2 = 1;
+    mouse_state = BUTTON_PRESSED;
   }
 }
 

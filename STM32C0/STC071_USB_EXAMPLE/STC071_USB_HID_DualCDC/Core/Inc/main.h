@@ -39,7 +39,10 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern __IO uint32_t BspButtonState;
+extern volatile uint8_t tx_pending_1; 
+extern volatile uint8_t tx_pending_2; 
+extern volatile uint8_t mouse_state;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
