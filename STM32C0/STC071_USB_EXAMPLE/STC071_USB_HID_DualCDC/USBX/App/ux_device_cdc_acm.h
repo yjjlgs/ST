@@ -77,7 +77,6 @@ extern uint8_t UserRx2BufferFS[APP_RX_DATA_SIZE];
 extern uint8_t UserTx2BufferFS[APP_TX_DATA_SIZE];
 /* USER CODE END PD */
 
-
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */

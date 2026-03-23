@@ -360,8 +360,8 @@ uint16_t USBD_HID_ReportDesc_length(uint8_t hid_type);
 /* USER CODE BEGIN Private_macro */
 
 /* Device CDC-ACM-2 Class */
-#define CDC1_CLASS_INDEX      1U   /* UserClassInstance ÀïµÚ 1 ¸ö CDC µÄË÷Òý */
-#define CDC2_CLASS_INDEX      2U   /* UserClassInstance ÀïµÚ 2 ¸ö CDC µÄË÷Òý */
+#define CDC1_CLASS_INDEX      1U   /* UserClassInstance é‡Œç¬¬ 1 ä¸ª CDC çš„ç´¢å¼• */
+#define CDC2_CLASS_INDEX      2U   /* UserClassInstance é‡Œç¬¬ 2 ä¸ª CDC çš„ç´¢å¼• */
 
 #define USBD_CDCACM_2_EPINCMD_ADDR                      0x85U
 #define USBD_CDCACM_2_EPINCMD_FS_MPS                    8U

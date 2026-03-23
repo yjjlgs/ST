@@ -87,7 +87,6 @@ static void USBD_CDC_VCP_Config(UX_SLAVE_CLASS_CDC_ACM_LINE_CODING_PARAMETER *);
 UX_SLAVE_CLASS_CDC_ACM* Get_CDC_ACM_Handle_By_Index(UX_SLAVE_DEVICE *device, uint8_t cdc_index);
 /* USER CODE END PFP */
 
-
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
@@ -108,7 +107,6 @@ VOID USBD_CDC_ACM_Activate(VOID *cdc_acm_instance)
 
   return;
 }
-
 
 /**
   * @brief  USBD_CDC_ACM_Deactivate
@@ -194,7 +192,6 @@ VOID USBD_CDC_ACM_ParameterChange(VOID *cdc_acm_instance)
 
   return;
 }
-
 
 /* USER CODE BEGIN 1 */
 
@@ -326,7 +323,7 @@ VOID CDC_ACM_1_Read_Single_Package_Task(VOID)
   /* Get Data interface (interface 1) */
   read_length = (_ux_system_slave->ux_system_slave_speed == UX_HIGH_SPEED_DEVICE) ? 512 : 64;
   UX_SLAVE_CLASS_CDC_ACM *cdc_acm = Get_CDC_ACM_Handle_By_Index(device, CDC_INTERFACE_TYPE_1);
-  /* ¿ÕÖ¸Õë±£»¤ */
+  /* ç©ºæŒ‡é’ˆä¿æŠ¤ */
   if (cdc_acm == UX_NULL)
   {
         return; 
@@ -423,7 +420,7 @@ VOID CDC_ACM_1_Read_Multiple_Package_Task(VOID)
 //   cdc_acm =  data_interface->ux_slave_interface_class_instance;
   read_length = (_ux_system_slave->ux_system_slave_speed == UX_HIGH_SPEED_DEVICE) ? 512 : 64;
   UX_SLAVE_CLASS_CDC_ACM *cdc_acm = Get_CDC_ACM_Handle_By_Index(device, CDC_INTERFACE_TYPE_1);
-  /* ¿ÕÖ¸Õë±£»¤ */
+  /* ç©ºæŒ‡é’ˆä¿æŠ¤ */
   if (cdc_acm == UX_NULL)
   {
         return; 
@@ -679,7 +676,7 @@ VOID CDC_ACM_2_Read_Single_Package_Task(VOID)
   /* Get Data interface (interface 1) */
   read_length = (_ux_system_slave->ux_system_slave_speed == UX_HIGH_SPEED_DEVICE) ? 512 : 64;
   UX_SLAVE_CLASS_CDC_ACM *cdc_acm = Get_CDC_ACM_Handle_By_Index(device, CDC_INTERFACE_TYPE_2);
-  /* ¿ÕÖ¸Õë±£»¤ */
+  /* ç©ºæŒ‡é’ˆä¿æŠ¤ */
   if (cdc_acm == UX_NULL)
   {
         return; 
@@ -776,7 +773,7 @@ VOID CDC_ACM_2_Read_Multiple_Package_Task(VOID)
 //   cdc_acm =  data_interface->ux_slave_interface_class_instance;
   read_length = (_ux_system_slave->ux_system_slave_speed == UX_HIGH_SPEED_DEVICE) ? 512 : 64;
   UX_SLAVE_CLASS_CDC_ACM *cdc_acm = Get_CDC_ACM_Handle_By_Index(device, CDC_INTERFACE_TYPE_2);
-  /* ¿ÕÖ¸Õë±£»¤ */
+  /* ç©ºæŒ‡é’ˆä¿æŠ¤ */
   if (cdc_acm == UX_NULL)
   {
         return; 
