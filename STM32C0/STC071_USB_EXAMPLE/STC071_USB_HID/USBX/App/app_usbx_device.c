@@ -246,9 +246,9 @@ VOID USBX_APP_Device_Init(VOID)
 
 
   /* USER CODE BEGIN USB_Device_Init_PreTreatment_1 */
-  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x00, PCD_SNG_BUF, 0x0C);
-  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x80, PCD_SNG_BUF, 0x4C);
-//   HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x81, PCD_SNG_BUF, 0x8C);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x00, PCD_SNG_BUF, 0x10); 
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x80, PCD_SNG_BUF, 0x50); 
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x81, PCD_SNG_BUF, 0x90);  
   /* USER CODE END USB_Device_Init_PreTreatment_1 */
 
   /* Initialize the device controller driver*/
